@@ -104,53 +104,26 @@ func lexic(_ json: String) -> Array<Any> {
     return tokens
 }
 
-class Container {
-    var parent: Container?
-    var nodes: [Container] = []
-    private(set) var obj: Any
-    init(withObj obj: Array<Any>) {
-        self.obj = obj
-    }
-    init(withObj obj: Dictionary<String, Any>) {
-        self.obj = obj
-    }
-    public func addValue(_ val: Any) {
-        var arr = obj as! Array<Any>
-        arr.append(val)
-    }
-    public func addValue(value val: Any, forKey key: String) {
-        var dict = obj as! Dictionary<String, Any>
-        dict[key] = val
-    }
-    func addContainer(_ container: Container) {
-        container.parent = self
-        self.nodes.append(container)
-    }
-    public func addListContainer() -> Container {
-        let newContainer = Container(withObj: [])
-        addContainer(newContainer)
-        return newContainer
-    }
-    public func addObjectContainer() -> Container {
-        let newContainer = Container(withObj: Dictionary())
-        addContainer(newContainer)
-        return newContainer
-    }
-}
-
-func parse(_ tokens: Array<Any>) throws -> Container {
+func parse(_ tokens: Array<Any>) throws -> Any? {
     enum Capture { case value, key, separator, keySeparator }
 
-    var container: Container = Container(withObj: [])
+    var containers: Array<Any> = []
     
     var mod: Capture = .value
     var tmpKeys: [String] = []
     
     func assignValue(_ val: Any) {
-        if container.obj is Array<Any> {
-            container.addValue(val)
-        } else if let key = tmpKeys.last {
-            container.addValue(value: val, forKey: key)
+        if let container = containers.last {
+            if var arr = container as? Array<Any> {
+                arr.append(val)
+                containers[containers.count-1] = arr
+            }
+            if var obj = container as? Dictionary<String, Any> {
+                obj[tmpKeys.popLast()!] = val
+                containers[containers.count-1] = obj
+            }
+        } else {
+            containers.append(val)
         }
         mod = .separator
     }
@@ -163,13 +136,13 @@ func parse(_ tokens: Array<Any>) throws -> Container {
                     throw NSError(domain: "Unexpected value", code: 001)
                 }
                 mod = .key
-                container = container.addObjectContainer()
+                containers.append(Dictionary<String, Any>())
             case "}":
-                if mod != .separator || !(container.obj is Dictionary<String, Any>) {
+                if mod != .separator || !(containers.last is Dictionary<String, Any>) {
+                    print(containers)
                     throw NSError(domain: "Unexpected value", code: 002)
                 }
-                mod = .separator
-                container = container.parent!
+                assignValue(containers.popLast()!)
             case ",":
                 if mod != .separator {
                     throw NSError(domain: "Unexpected value", code: 003)
@@ -179,13 +152,13 @@ func parse(_ tokens: Array<Any>) throws -> Container {
                 if mod != .value {
                     throw NSError(domain: "Unexpected value", code: 004)
                 }
-                container = container.addListContainer()
+                mod = .value
+                containers.append(Array<Any>())
             case "]":
-                if mod != .separator || !(container.obj is Array<Any>) {
+                if mod != .separator || !(containers.last is Array<Any>) {
                     throw NSError(domain: "Unexpected value", code: 005)
                 }
-                mod = .separator
-                container = container.parent!
+                assignValue(containers.popLast()!)
             case ":":
                 if mod != .keySeparator {
                     throw NSError(domain: "Unexpected value", code: 006)
@@ -211,14 +184,15 @@ func parse(_ tokens: Array<Any>) throws -> Container {
             assignValue(token)
         }
     }
-    while let parent = container.parent {
-        container = parent
-    }
-    return container
+    return containers.first
 }
 
+print("JSON:")
+print(json)
 let tokens = lexic(json)
-let container = try parse(tokens)
-
+print("LEXICAL:")
 print(tokens)
-print(container.obj)
+print("PARSED:")
+if let containers = try parse(tokens) {
+    print(containers)
+}
