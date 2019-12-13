@@ -13,6 +13,7 @@ func lexic(_ json: String) -> Array<Any> {
 
     var tokens: Array<Any> = []
     let numbers = "0123456789."
+    var capture: String = ""
 
     enum Capture {
         case tokens, string, t, f, number, null
@@ -24,70 +25,65 @@ func lexic(_ json: String) -> Array<Any> {
         if s == "{" || s == "}" || s == "[" || s == "]" || s == "," || s == ":" {
             tokens.append(s)
         } else if s == "t" {
-            tokens.append(String(s))
+            capture = String(s)
             mod = .t
         } else if s == "f" {
-            tokens.append(String(s))
+            capture = String(s)
             mod = .f
         } else if s == "n" {
-            tokens.append(String(s))
+            capture = String(s)
             mod = .null
         } else if numbers.contains(s) {
-            tokens.append(String(s))
+            capture = String(s)
             mod = .number
         } else if s == "\"" {
-            tokens.append("")
+            capture = ""
             mod = .string
         }
+    }
+    
+    func assignCapture(_ token: Any) -> Bool {
+        tokens.append(token)
+        capture = ""
+        return true
     }
 
     func captureString(_ s: Character) -> Bool {
         if s == "\"" {
-            return true
+            return assignCapture(capture)
         }
-        var last = tokens.last as! String
-        last.append(s)
-        tokens[tokens.count-1] = last
+        capture.append(s)
         return false
     }
 
     func captureNumber(_ s: Character) -> Bool {
-        var last = tokens.last as! String
-        if numbers.contains(s) {
-            last.append(s)
-            tokens[tokens.count-1] = last
-            return false
+        if !numbers.contains(s) {
+            return assignCapture(Double(capture)!)
         }
-        tokens[tokens.count-1] = Double(last)!
-        return true
+        capture.append(s)
+        return false
     }
 
     func captureBoolean(_ s: Character) throws -> Bool {
-        var last = tokens.last as! String
-        last.append(s)
+        capture.append(s)
         let check = mod == .t ? String(true) : String(false)
-        if last.count == check.count {
-            if check != last {
+        if capture.count == check.count {
+            if check != capture {
                 throw NSError(domain: "Error parsing value", code: 004)
             }
-            tokens[tokens.count-1] = mod == .t
-            return true
+            return assignCapture(mod == .t)
         }
-        tokens[tokens.count-1] = last
         return false
     }
 
     func captureNull(_ s: Character) throws -> Bool {
-        var last = tokens.last as! String
-        last.append(s)
-        if last.count == "null".count {
-            if last != "null" {
+        capture.append(s)
+        if capture.count == "null".count {
+            if capture != "null" {
                 throw NSError(domain: "Error parsing value", code: 004)
             }
-            tokens[tokens.count-1] = NSNull()
-            return true
+            return assignCapture(NSNull())
         }
-        tokens[tokens.count-1] = last
         return false
     }
 
