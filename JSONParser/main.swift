@@ -8,8 +8,6 @@
 
 import Foundation
 
-let json = "{ \"parser\": [\"yes\", true, 100, false] }"
-
 func lexic(_ json: String) -> Array<Any> {
     let characters = Array(json)
 
@@ -17,11 +15,11 @@ func lexic(_ json: String) -> Array<Any> {
     let numbers = "0123456789."
 
     enum Capture {
-        case tokens, string, t, f, number
+        case tokens, string, t, f, number, null
     }
 
     var mod: Capture = .tokens
-    
+
     func captureToken(_ s: Character) -> Void {
         if s == "{" || s == "}" || s == "[" || s == "]" || s == "," || s == ":" {
             tokens.append(s)
@@ -31,6 +29,9 @@ func lexic(_ json: String) -> Array<Any> {
         } else if s == "f" {
             tokens.append(String(s))
             mod = .f
+        } else if s == "n" {
+            tokens.append(String(s))
+            mod = .null
         } else if numbers.contains(s) {
             tokens.append(String(s))
             mod = .number
@@ -39,7 +40,7 @@ func lexic(_ json: String) -> Array<Any> {
             mod = .string
         }
     }
-    
+
     func captureString(_ s: Character) -> Bool {
         if s == "\"" {
             return true
@@ -49,7 +50,7 @@ func lexic(_ json: String) -> Array<Any> {
         tokens[tokens.count-1] = last
         return false
     }
-    
+
     func captureNumber(_ s: Character) -> Bool {
         var last = tokens.last as! String
         if numbers.contains(s) {
@@ -60,14 +61,14 @@ func lexic(_ json: String) -> Array<Any> {
         tokens[tokens.count-1] = Double(last)!
         return true
     }
-    
+
     func captureBoolean(_ s: Character) throws -> Bool {
         var last = tokens.last as! String
         last.append(s)
         let check = mod == .t ? String(true) : String(false)
         if last.count == check.count {
             if check != last {
-                throw NSError(domain: "Error parsing boolean value", code: 004)
+                throw NSError(domain: "Error parsing value", code: 004)
             }
             tokens[tokens.count-1] = mod == .t
             return true
@@ -75,8 +76,21 @@ func lexic(_ json: String) -> Array<Any> {
         tokens[tokens.count-1] = last
         return false
     }
-    
-    
+
+    func captureNull(_ s: Character) throws -> Bool {
+        var last = tokens.last as! String
+        last.append(s)
+        if last.count == "null".count {
+            if last != "null" {
+                throw NSError(domain: "Error parsing value", code: 004)
+            }
+            tokens[tokens.count-1] = NSNull()
+            return true
+        }
+        tokens[tokens.count-1] = last
+        return false
+    }
+
     do {
         for s in characters {
             switch mod {
@@ -95,12 +109,16 @@ func lexic(_ json: String) -> Array<Any> {
                 if try captureBoolean(s) {
                     mod = .tokens
                 }
+            case .null:
+                if try captureNull(s) {
+                    mod = .tokens
+                }
             }
         }
     } catch let error as NSError {
         print(error)
     }
-    
+
     return tokens
 }
 
@@ -108,10 +126,10 @@ func parse(_ tokens: Array<Any>) throws -> Any? {
     enum Capture { case value, key, separator, keySeparator }
 
     var containers: Array<Any> = []
-    
+
     var mod: Capture = .value
     var tmpKeys: [String] = []
-    
+
     func assignValue(_ val: Any) {
         if let container = containers.last {
             if var arr = container as? Array<Any> {
@@ -127,7 +145,7 @@ func parse(_ tokens: Array<Any>) throws -> Any? {
         }
         mod = .separator
     }
-    
+
     for token in tokens {
         if let char = token as? Character {
             switch char {
@@ -139,7 +157,6 @@ func parse(_ tokens: Array<Any>) throws -> Any? {
                 containers.append(Dictionary<String, Any>())
             case "}":
                 if mod != .separator || !(containers.last is Dictionary<String, Any>) {
-                    print(containers)
                     throw NSError(domain: "Unexpected value", code: 002)
                 }
                 assignValue(containers.popLast()!)
@@ -147,7 +164,7 @@ func parse(_ tokens: Array<Any>) throws -> Any? {
                 if mod != .separator {
                     throw NSError(domain: "Unexpected value", code: 003)
                 }
-                mod = .value
+                mod = containers.last is Dictionary<String, Any> ? .key : .value
             case "[":
                 if mod != .value {
                     throw NSError(domain: "Unexpected value", code: 004)
@@ -168,16 +185,15 @@ func parse(_ tokens: Array<Any>) throws -> Any? {
                 throw NSError(domain: "Unexpected value", code: 007)
             }
         } else if let str = token as? String {
-            if mod != .value && mod != .key {
-                throw NSError(domain: "Unexpected value", code: 008)
-            }
             if mod == .key {
                 tmpKeys.append(str)
                 mod = .keySeparator
             } else if mod == .value {
                 assignValue(str)
+            } else {
+                throw NSError(domain: "Unexpected value", code: 008)
             }
-        } else if token is Double || token is Bool {
+        } else {
             if mod != .value {
                 throw NSError(domain: "Unexpected value", code: 009)
             }
@@ -187,6 +203,7 @@ func parse(_ tokens: Array<Any>) throws -> Any? {
     return containers.first
 }
 
+let json = "{ \"userId\": 1, \"id\": 1.1, \"title\": \"+\", \"completed\": false }"
 print("JSON:")
 print(json)
 let tokens = lexic(json)
