@@ -14,6 +14,8 @@ func lexic(_ json: String) -> Array<Any> {
     var tokens: Array<Any> = []
     let numbers = "0123456789."
     var capture: String = ""
+    var isCaptureEscaped = false
+    let escapableCharacters = "bfnrt\"\\"
 
     enum Capture {
         case tokens, string, t, f, number, null
@@ -41,18 +43,26 @@ func lexic(_ json: String) -> Array<Any> {
             mod = .string
         }
     }
-    
+
     func assignCapture(_ token: Any) -> Bool {
         tokens.append(token)
         capture = ""
+        isCaptureEscaped = false
         return true
     }
 
-    func captureString(_ s: Character) -> Bool {
-        if s == "\"" {
-            return assignCapture(capture)
+    func captureString(_ s: Character) throws -> Bool {
+        if s == "\""  {
+            if isCaptureEscaped {
+                _ = capture.popLast()
+            } else {
+                return assignCapture(capture)
+            }
+        } else if isCaptureEscaped, !escapableCharacters.contains(s) {
+            throw NSError(domain: "Error escaped character", code: 001)
         }
         capture.append(s)
+        isCaptureEscaped = s == "\\" && !isCaptureEscaped
         return false
     }
 
@@ -93,7 +103,7 @@ func lexic(_ json: String) -> Array<Any> {
             case .tokens:
                 captureToken(s)
             case .string:
-                if captureString(s) {
+                if try captureString(s) {
                     mod = .tokens
                 }
             case .number:
@@ -199,7 +209,7 @@ func parse(_ tokens: Array<Any>) throws -> Any? {
     return containers.first
 }
 
-let json = "{ \"userId\": 1, \"id\": 1.1, \"title\": \"+\", \"completed\": false }"
+let json = "{ \"userId\": 1, \"id\": 1.1, \"title\": \" \\\\+\\\\ \", \"completed\": false }"
 print("JSON:")
 print(json)
 let tokens = lexic(json)
