@@ -31,9 +31,14 @@ class Tests: XCTestCase {
     }
 
     func testPerformanceExample() {
-        // This is an example of a performance test case.
+        let json = "{ \"userId\": 1, \"id\": 1.1, \"title\": \" \\\\+\\\\ \", \"completed\": false }"
         measure {
-            // Put the code you want to measure the time of here.
+            do {
+                _ = try parse(lexic(json)) as! Dictionary<String, Any?>
+            } catch {
+                print(error)
+            }
+            
         }
     }
 
