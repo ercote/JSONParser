@@ -13,21 +13,18 @@ import XCTest
 class Tests: XCTestCase {
 
     override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
     }
 
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
     func testSimpleJSON() throws {
-        let json = "{ \"userId\": 1, \"id\": 1.1, \"title\": \" \\\\+\\\\ \", \"completed\": false }"
+        let jsonPath = Bundle(for: type(of: self)).path(forResource: "test", ofType: "json")!
+        let json = try String(contentsOfFile: jsonPath)
         let tokens = lexic(json)
-        let container = try parse(tokens) as! Dictionary<String, Any?>
-        XCTAssertEqual(container["userId"] as! Double, 1.0)
-        XCTAssertEqual(container["id"] as! Double, 1.1)
-        XCTAssertEqual(container["title"] as! String, " \\\\+\\\\ ")
-        XCTAssertEqual(container["completed"] as! Bool, false)
+        let container = try parse(tokens) as! Array<Any?>
+        let firstObject = container[0] as! Dictionary<String, Any?>
+        XCTAssertEqual(firstObject["_id"] as! String, "5df6e4c2689b2ad6546b9b66")
     }
 
     func testPerformanceExample() {

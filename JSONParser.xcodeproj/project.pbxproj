@@ -11,6 +11,7 @@
 		DFBA3FBB23A605BC00908781 /* tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFBA3FBA23A605BC00908781 /* tests.swift */; };
 		DFBA3FBD23A6060900908781 /* JSONParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFBA3FBC23A6060900908781 /* JSONParser.swift */; };
 		DFBA3FBE23A6062300908781 /* JSONParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFBA3FBC23A6060900908781 /* JSONParser.swift */; };
+		DFBA3FCC23A71CCF00908781 /* test.json in Resources */ = {isa = PBXBuildFile; fileRef = DFBA3FCB23A71CCF00908781 /* test.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +35,7 @@
 		DFBA3FBA23A605BC00908781 /* tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tests.swift; sourceTree = "<group>"; };
 		DFBA3FBC23A6060900908781 /* JSONParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONParser.swift; sourceTree = "<group>"; };
 		DFBA3FC323A6064700908781 /* TESTS99.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TESTS99.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFBA3FCB23A71CCF00908781 /* test.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = test.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +104,7 @@
 			children = (
 				DFBA3FB323A604E700908781 /* Info.plist */,
 				DFBA3FBA23A605BC00908781 /* tests.swift */,
+				DFBA3FCB23A71CCF00908781 /* test.json */,
 			);
 			path = JSONParserTests;
 			sourceTree = "<group>";
@@ -234,6 +237,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DFBA3FCC23A71CCF00908781 /* test.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
