@@ -8,13 +8,9 @@
 
 import Foundation
 
+// TODO: accept file patch or json inline as command line argument
+
 let json = "{ \"userId\": 1, \"id\": 1.1, \"title\": \" \\\\+\\\\ \", \"completed\": false }"
-print("JSON:")
-print(json)
-let tokens = lexic(json)
-print("LEXICAL:")
-print(tokens)
-print("PARSED:")
-if let containers = try parse(tokens) {
+if let containers = try JSONParser.parse(json) {
     print(containers)
 }

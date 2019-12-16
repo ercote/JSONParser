@@ -10,7 +10,7 @@ import Foundation
 
 public class JSONParser {
     
-    func lexical(_ json: String) -> Array<Any> {
+    private func lexical(_ json: String) -> Array<Any> {
         let characters = Array(json)
         
         var tokens: Array<Any> = []
@@ -130,7 +130,7 @@ public class JSONParser {
         return tokens
     }
     
-    func parseTokens(_ tokens: Array<Any>) throws -> Any? {
+    private func parseTokens(_ tokens: Array<Any>) throws -> Any? {
         enum Capture { case value, key, separator, keySeparator }
         
         var containers: Array<Any> = []
