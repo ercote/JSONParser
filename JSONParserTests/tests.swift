@@ -21,17 +21,17 @@ class Tests: XCTestCase {
     func testSimpleJSON() throws {
         let jsonPath = Bundle(for: type(of: self)).path(forResource: "test", ofType: "json")!
         let json = try String(contentsOfFile: jsonPath)
-        let tokens = lexic(json)
-        let container = try parse(tokens) as! Array<Any?>
+        let container = try JSONParser.parse(json) as! Array<Any?>
         let firstObject = container[0] as! Dictionary<String, Any?>
         XCTAssertEqual(firstObject["_id"] as! String, "5df6e4c2689b2ad6546b9b66")
     }
 
-    func testPerformanceExample() {
-        let json = "{ \"userId\": 1, \"id\": 1.1, \"title\": \" \\\\+\\\\ \", \"completed\": false }"
+    func testPerformanceExample() throws {
+        let jsonPath = Bundle(for: type(of: self)).path(forResource: "test", ofType: "json")!
+        let json = try String(contentsOfFile: jsonPath)
         measure {
             do {
-                _ = try parse(lexic(json)) as! Dictionary<String, Any?>
+                _ = try JSONParser.parse(json)
             } catch {
                 print(error)
             }
