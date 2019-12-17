@@ -17,6 +17,26 @@ class Tests: XCTestCase {
 
     override func tearDown() {
     }
+    
+    func testBools() throws {
+        XCTAssertTrue(try JSONParser.parse("true") as! Bool)
+        XCTAssertFalse(try JSONParser.parse("false") as! Bool)
+    }
+    
+    func testNull() throws {
+        XCTAssertNil(try JSONParser.parse("null"))
+    }
+    
+    func testNumber() throws {
+        let container = try JSONParser.parse("-12345.12345") as! Double
+        XCTAssertEqual(container, -12345.12345)
+    }
+    
+    func testStringOnly() throws {
+        let s = "\"json parsing 👌 \\\"  \""
+        let container = try JSONParser.parse(s) as! String
+        XCTAssertEqual(container, "json parsing 👌 \"  ")
+    }
 
     func testSimpleJSON() throws {
         let jsonPath = Bundle(for: type(of: self)).path(forResource: "test", ofType: "json")!
