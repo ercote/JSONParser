@@ -10,11 +10,11 @@ import Foundation
 
 public class JSONParser {
     
-    private func lexical(_ json: String) -> Array<Any> {
+    private func lexical(_ json: String) -> Array<Any?> {
         let characters = Array(json)
         
-        var tokens: Array<Any> = []
-        let numbers = "0123456789."
+        var tokens: Array<Any?> = []
+        let numbers = "-0123456789."
         var capture: String = ""
         var isCaptureEscaped = false
         let escapableCharacters = "bfnrt\"\\"
@@ -46,7 +46,7 @@ public class JSONParser {
             }
         }
         
-        func assignCapture(_ token: Any) -> Bool {
+        func assignCapture(_ token: Any?) -> Bool {
             tokens.append(token)
             capture = ""
             isCaptureEscaped = false
@@ -70,7 +70,10 @@ public class JSONParser {
         
         func captureNumber(_ s: Character) -> Bool {
             if !numbers.contains(s) {
-                return assignCapture(Double(capture)!)
+                return assignCapture(
+                    numbers.contains(".")
+                    ? Double(capture)!
+                    : Double(capture)!)
             }
             capture.append(s)
             return false
@@ -94,7 +97,7 @@ public class JSONParser {
                 if capture != "null" {
                     throw NSError(domain: "Error parsing value", code: 004)
                 }
-                return assignCapture(NSNull())
+                return assignCapture(nil)
             }
             return false
         }
@@ -126,21 +129,23 @@ public class JSONParser {
         } catch let error as NSError {
             print(error)
         }
-        
+        if mod == .number, !capture.isEmpty {
+            _ = assignCapture(Double(capture)!)
+        }
         return tokens
     }
     
-    private func parseTokens(_ tokens: Array<Any>) throws -> Any? {
+    private func parseTokens(_ tokens: Array<Any?>) throws -> Any? {
         enum Capture { case value, key, separator, keySeparator }
         
-        var containers: Array<Any> = []
+        var containers: Array<Any?> = []
         
         var mod: Capture = .value
         var tmpKeys: [String] = []
         
-        func assignValue(_ val: Any) {
+        func assignValue(_ val: Any?) {
             if let container = containers.last {
-                if var arr = container as? Array<Any> {
+                if var arr = container as? Array<Any?> {
                     arr.append(val)
                     containers[containers.count-1] = arr
                 }
@@ -208,7 +213,10 @@ public class JSONParser {
                 assignValue(token)
             }
         }
-        return containers.first
+        if containers.count > 1 {
+            throw NSError(domain: "Object not closed", code: 010)
+        }
+        return containers.first!
     }
     
     private init() {
