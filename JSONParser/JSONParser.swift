@@ -10,7 +10,7 @@ import Foundation
 
 public class JSONParser {
     
-    private func lexical(_ json: String) -> Array<Any?> {
+    private func lexical(_ json: String) throws -> Array<Any?> {
         let characters = Array(json)
         
         var tokens: Array<Any?> = []
@@ -126,8 +126,6 @@ public class JSONParser {
                     }
                 }
             }
-        } catch let error as NSError {
-            print(error)
         }
         if mod == .number, !capture.isEmpty {
             _ = assignCapture(Double(capture)!)
@@ -224,7 +222,7 @@ public class JSONParser {
     
     public static func parse(_ json: String) throws -> Any? {
         let parser = JSONParser()
-        let tokens = parser.lexical(json)
+        let tokens = try parser.lexical(json)
         return try parser.parseTokens(tokens)
     }
 }
